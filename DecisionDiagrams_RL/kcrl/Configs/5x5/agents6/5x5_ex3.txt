@@ -1,0 +1,22 @@
+t_mix
+1
+t_max
+5
+max_cap
+2
+num_of_zones
+25
+num_of_agents
+6
+start_zones
+[0, 1, 2, 3, 4]
+goal_zones
+[20, 21, 22, 23, 24]
+starts
+[1, 4, 2, 23, 20, 20]
+goals
+[24, 21, 24, 4, 4, 3]
+config
+None
+SP_config
+[[0, 1, 24], [1, 4, 21], [2, 2, 24], [3, 23, 4], [4, 20, 4], [5, 20, 3]]
