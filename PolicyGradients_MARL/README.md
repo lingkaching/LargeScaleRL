@@ -1,6 +1,16 @@
 # Zone-Based-Multiagent-Pathfinding
 
-* To start the training process, run
+
+## Requirement for running the code
+
+* Python 3 (>=3.6)
+* Tensorflow (1.7)
+* Numpy (1.13)
+* Scipy (1.3)
+* Pathos
+* [Networkx](https://networkx.org/) (>=2.4)
+
+## Running the code
 ```
 cd PythonScripts 
 python DCRL.py -t 500 -b 8 -i 500 -d 0.99 -l 0.001 -z 5x5 -m landmark -n 6 -k 5 -s 0 -x 0 -r 1 -q 25 -f 100 -p 50
