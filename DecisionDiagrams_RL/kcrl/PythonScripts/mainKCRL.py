@@ -18,7 +18,6 @@ from collections import deque
 from env_simulator import MakeEnv
 from optparse import OptionParser
 import os
-from knowledgeCompilation import A_s
 from policyNet import Actor
 from utilis import *
 from pathos.multiprocessing import ThreadingPool as Pool
@@ -38,7 +37,7 @@ def InitialiseActor(g_1, lr, edges, num_of_zones, num_of_agents, GOALS, T_min, T
 			polNNs.append(polNN)
 	return polNNs
 	
-def episodeLoop(As, env, options, all_static_info, sess):
+def episodeLoop(PSDD, env, options, all_static_info, sess):
 	edges = all_static_info["edges"]
 	polNNs = all_static_info["polNNs"]
 	length = all_static_info["length"]
@@ -91,7 +90,7 @@ def episodeLoop(As, env, options, all_static_info, sess):
 
 	env.reset()
 	for nn in range(num_of_agents):
-		As[nn].reset()
+		PSDD[nn].reset()
 	
 	for steps in range(0, T):   		
 		action_matrix = [] 
@@ -132,8 +131,8 @@ def episodeLoop(As, env, options, all_static_info, sess):
 			obs.append(obsOnehot)
 			
 			if(destID == -1 and timeDest == -1 and (goal != -1 and goal != zoneID)):   
-				A, visited_nodes_dict = As[nn].get_A()
-				new_set = [As[nn].lit_edge_map[ii] for ii in A]
+				valid_literals, visited_nodes_dict = PSDD[nn].get_valid_literal()
+				new_set = [PSDD[nn].lit_edge_map[ii] for ii in valid_literals]
 
 				possible_zone_actions = [xx-1 if xx != zoneID+1 else yy-1 for xx, yy in new_set]
 				possible_actions = [1 if z_a in possible_zone_actions else 0 for z_a in edges[zoneID] ]
@@ -147,9 +146,9 @@ def episodeLoop(As, env, options, all_static_info, sess):
 					if edges[zoneID][a]+1 in xx:
 						edge_selected = xx
 
-				new_e = As[nn].edge_lit_map[edge_selected]
-				As[nn].evi_edges.append(new_e)			
-				As[nn].nodes_info = visited_nodes_dict[new_e]
+				new_e =PSDD[nn].edge_lit_map[edge_selected]
+				PSDD[nn].evi_edges.append(new_e)			
+				PSDD[nn].nodes_info = visited_nodes_dict[new_e]
 
 				actOneHot = to_one_hot(a, len(edges[zoneID]))
 				nn_input1[0,GOALS_index[goal],:] = actOneHot
@@ -308,7 +307,7 @@ def episodeLoop(As, env, options, all_static_info, sess):
 					nextretdict[state].append(rets[nn][ss+1])
 	return (total_len, num_collision, obsdict, actdict, valid_actions_dict, timeTodestdict, retdict, nextretdict)
 																					   
-def trainModel(options, cap, edges, g_1, polNNs, length, listofenvironments, T_min, T_max, num_of_agents, num_of_zones, GOALS, landmarks, listofas):
+def trainModel(options, cap, edges, g_1, polNNs, length, listofenvironments, T_min, T_max, num_of_agents, num_of_zones, GOALS, landmarks, listofPSDDs):
 	uniqueGOALS = list(np.unique(GOALS))
 	num_of_GOALS = len(uniqueGOALS)
 	GOALS_index = {yy : xx for xx, yy in enumerate(uniqueGOALS)}
@@ -354,7 +353,7 @@ def trainModel(options, cap, edges, g_1, polNNs, length, listofenvironments, T_m
 			retdict = {}
 			nextretdict = {}
 			
-			result = pool.amap(episodeLoop, listofas, listofenvironments, [options]*len(listofenvironments), [all_static_info]*len(listofenvironments), [sess]*len(listofenvironments))
+			result = pool.amap(episodeLoop, listofPSDDs, listofenvironments, [options]*len(listofenvironments), [all_static_info]*len(listofenvironments), [sess]*len(listofenvironments))
 			all_dictionaries_all_episodes = result.get()
 
 			for data_from_env in range(0,N):  
@@ -446,10 +445,11 @@ def main():
 	length = shortestPath(options.modelPath)
 	edges = constructGraph(options.modelPath)
 	listofenvironments = envInitialise(options, num_of_agents, STARTS, GOALS, edges)
-	listofas = psddInitialise(options, STARTS, GOALS)
+	listofPSDDs = psddInitialise(options, STARTS, GOALS)
+
 	g_1 = tf.Graph()      
 	polNNs = InitialiseActor(g_1, options.lr, edges, num_of_zones, num_of_agents, GOALS, T_min, T_max)
-	trainModel(options, cap, edges, g_1, polNNs, length, listofenvironments, T_min, T_max, num_of_agents, num_of_zones, GOALS, landmarks, listofas)
+	trainModel(options, cap, edges, g_1, polNNs, length, listofenvironments, T_min, T_max, num_of_agents, num_of_zones, GOALS, landmarks, listofPSDDs)
 
 if __name__ == '__main__':
 	main()

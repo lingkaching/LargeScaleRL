@@ -13,7 +13,7 @@ import random
 import time
 import os
 from env_simulator import MakeEnv
-from knowledgeCompilation import A_s
+from knowledgeCompilation import TDSAT
 
 def psddInitialise(options, STARTS, GOALS):
 
@@ -27,9 +27,9 @@ def psddInitialise(options, STARTS, GOALS):
 	json_file = '../../data/sddFiles/'+str(options.mapSize)+'/'+str(options.mapSize)+'.json'
 	lit_edge_file = '../../data/sddFiles/'+str(options.mapSize)+'/'+'lit_edge_map_'+str(options.mapSize)+'_zdd.txt'
 
-	listofas = []
+	listofPSDDs = []
 	for _ in range(0, options.N):
-		As = {}
+		PSDDs = {}
 		agent_id = 0
 		mapSize = int(options.mapSize.split('x')[0])
 		for s,g in zip(STARTS, GOALS):
@@ -42,10 +42,10 @@ def psddInitialise(options, STARTS, GOALS):
 			else:
 				d_super = (g+1, g+1+int(2*mapSize))
 			# num_psdd_node, num_vtree_node = 20279+1, 427+1
-			As[agent_id] = A_s(node_id_list_file, node_type_list_file, elements_list_file, literal_list_file, vtree_id_list_file, vtree_ancessors_file, edge_var_file, json_file, lit_edge_file, s_super, d_super)
+			PSDDs[agent_id] = TDSAT(node_id_list_file, node_type_list_file, elements_list_file, literal_list_file, vtree_id_list_file, vtree_ancessors_file, edge_var_file, json_file, lit_edge_file, s_super, d_super)
 			agent_id += 1 
-		listofas.append(As)
-	return listofas
+		listofPSDDs.append(PSDDs)
+	return listofPSDDs
 
 def envInitialise(options, num_of_agents, STARTS, GOALS, edges):
 	listofenvironments = []

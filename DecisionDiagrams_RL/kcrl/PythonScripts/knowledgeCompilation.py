@@ -20,7 +20,7 @@ class my_SddNode:
         self.elements = elements
         self.vtree_id = vtree_id
 
-class A_s:
+class TDSAT:
 	def __init__(self, node_id_list_file, node_type_list_file, elements_list_file, literal_list_file, vtree_id_list_file, vtree_ancessors_file, edge_var_file, json_file, lit_edge_file, s, d):
 
 		if os.path.isfile(lit_edge_file):
@@ -155,27 +155,25 @@ class A_s:
 		else:
 			return False
 	
-	def find_s_path(self, root, evi, nodes_info, visited_nodes, vtree_ancessors):
+	def top_down_search(self, root, evi, nodes_info, visited_nodes, vtree_ancessors):
 		if root.node_type == 3:
 			flag = False
 			for p,s in root.elements:
 				if s.node_type == 0: continue
+				
 				if not vtree_ancessors[p.vtree_id] and nodes_info[p.id] == True:
 					visited_nodes[p.id] = True
 					# if nodes_info[p.id]:					
 					if not vtree_ancessors[s.vtree_id] and nodes_info[s.id] != None:
 						flag = nodes_info[s.id]
-						visited_nodes[s.id] = flag
-
-					
+						visited_nodes[s.id] = flag					
 					elif visited_nodes[s.id] != None:
 						flag = visited_nodes[s.id]
 					else:
-						flag, visited_nodes = self.find_s_path(s, evi, nodes_info, visited_nodes, vtree_ancessors)
-						visited_nodes[s.id] = flag
+						flag, visited_nodes = self.top_down_search(s, evi, nodes_info, visited_nodes, vtree_ancessors)
+						visited_nodes[s.id] = flag				
 					if flag:
 						break
-
 			
 				if  visited_nodes[p.id] == True:
 					# print(s.id)
@@ -183,12 +181,10 @@ class A_s:
 					if not vtree_ancessors[s.vtree_id] and nodes_info[s.id] != None:
 						flag = nodes_info[s.id]
 						visited_nodes[s.id] = flag
-
-					
 					if visited_nodes[s.id] != None:
 						flag = visited_nodes[s.id]
 					else:
-						flag, visited_nodes = self.find_s_path(s, evi, nodes_info, visited_nodes, vtree_ancessors)
+						flag, visited_nodes = self.top_down_search(s, evi, nodes_info, visited_nodes, vtree_ancessors)
 						visited_nodes[s.id] = flag
 					if flag:
 						break
@@ -203,7 +199,7 @@ class A_s:
 							if visited_nodes[s.id] != None:
 								flag = visited_nodes[s.id]
 							else:
-								flag, visited_nodes = self.find_s_path(s, evi, nodes_info, visited_nodes, vtree_ancessors)
+								flag, visited_nodes = self.top_down_search(s, evi, nodes_info, visited_nodes, vtree_ancessors)
 								visited_nodes[s.id] = flag
 							if flag:
 								break
@@ -211,7 +207,7 @@ class A_s:
 							visited_nodes[p.id] = False       					
 					# p is a decompostion node
 					else:
-						flag_p,  visited_nodes = self.find_s_path(p, evi, nodes_info, visited_nodes, vtree_ancessors)
+						flag_p,  visited_nodes = self.top_down_search(p, evi, nodes_info, visited_nodes, vtree_ancessors)
 						if flag_p:
 							visited_nodes[p.id] = True
 							if not vtree_ancessors[s.vtree_id] and nodes_info[s.id] != None:
@@ -220,7 +216,7 @@ class A_s:
 							if visited_nodes[s.id] != None:
 								flag = visited_nodes[s.id]
 							else:
-								flag, visited_nodes = self.find_s_path(s, evi, nodes_info, visited_nodes, vtree_ancessors)
+								flag, visited_nodes = self.top_down_search(s, evi, nodes_info, visited_nodes, vtree_ancessors)
 								visited_nodes[s.id] = flag
 							if flag:
 								break
@@ -245,16 +241,14 @@ class A_s:
 				visited_nodes[root.id] = False
 				return False, visited_nodes
 
-	def get_A(self):
-	
+	def get_valid_literal(self):
 		successors = []
 		candidate_edge = [edge for edge in self.edges[self.evi_edges[-1]] if edge not in self.evi_edges] 
 		visited_nodes_dict = {}
 		for edge in candidate_edge:
-			temp, visited_nodes = self.find_s_path(self.sdd_root, self.evi_edges+[edge], self.nodes_info, {k: None for k in range(self.num_psdd_node)}, self.vtree_ancessors[edge])
+			temp, visited_nodes = self.top_down_search(self.sdd_root, self.evi_edges+[edge], self.nodes_info, {k: None for k in range(self.num_psdd_node)}, self.vtree_ancessors[edge])
 			if temp:
 				successors.append(edge)
 				visited_nodes_dict[edge] = visited_nodes
-
 		return successors, visited_nodes_dict
 
