@@ -57,7 +57,7 @@ python mainKCRL.py -t 500 -b 8 -i 500 -d 0.99 -l 0.001 -z 5x5 -m landmark -n 6 -
 ### Examples
 
 <!-- ![5x5](./images/5x5.jpg) -->
-<img src="./images/5x5.JPG" alt="5x5" width="200" height="150">
+<img src="./images/5x5.JPG" alt="5x5" width="150" height="150">
 
 Consider a 5x5 open grid map with 5 landmarks indicated as flags. Use the default parameters to train the agent for this setting.
 
