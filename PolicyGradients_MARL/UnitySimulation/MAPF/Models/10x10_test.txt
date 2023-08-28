@@ -1,0 +1,2 @@
+###dimensions10x10
+###obstacles
